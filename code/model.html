@@ -7610,6 +7610,134 @@ a.anchor-link {
 </div>
 </div>
 </div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3a1758fc">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [72]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">plot_source</span><span class="p">(</span><span class="n">schedule_df</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Convert the given schedule to plot source</span>
+<span class="sd">    schedule_df: the schedule df with the columns [exam, day, week, start_time, duration_min, timeslot]</span>
+<span class="sd">    Output: plot source for plotting</span>
+<span class="sd">    """</span>
+    <span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span><span class="p">,</span> <span class="n">exam_texts</span><span class="p">,</span> <span class="n">week_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">schedule_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"day"</span><span class="p">]</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"start_time"</span><span class="p">]</span>
+        <span class="n">week</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"week"</span><span class="p">]</span>
+
+        <span class="c1"># numeric y coordinate</span>
+        <span class="n">y_val</span> <span class="o">=</span> <span class="n">time_to_y</span><span class="p">[</span><span class="n">time</span><span class="p">]</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="p">(</span><span class="n">week</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">x_coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">day_to_x</span><span class="p">[</span><span class="n">day</span><span class="p">])</span>
+        <span class="n">y_coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_val</span><span class="p">)</span>
+        <span class="n">exam_texts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"exam"</span><span class="p">])</span>
+        <span class="n">week_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">week</span><span class="p">)</span>
+    <span class="n">student_counts</span> <span class="o">=</span> <span class="p">[</span><span class="n">exam_student_count</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">exam_texts</span><span class="p">]</span>
+
+    <span class="c1"># Combine exams in same cell</span>
+    <span class="n">df_vis</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+        <span class="s2">"day"</span><span class="p">:</span> <span class="n">x_coords</span><span class="p">,</span>
+        <span class="s2">"y"</span><span class="p">:</span> <span class="n">y_coords</span><span class="p">,</span>
+        <span class="s2">"week"</span><span class="p">:</span> <span class="n">week_list</span><span class="p">,</span>
+        <span class="s2">"exam"</span><span class="p">:</span> <span class="n">exam_texts</span><span class="p">,</span>
+        <span class="s2">"students"</span><span class="p">:</span> <span class="n">student_counts</span>
+    <span class="p">})</span>
+
+    <span class="n">df_grouped</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">df_vis</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">"day"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="s2">"week"</span><span class="p">])</span>
+        <span class="o">.</span><span class="n">agg</span><span class="p">({</span>
+            <span class="s2">"exam"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="s2">"students"</span><span class="p">:</span> <span class="s2">"sum"</span>
+        <span class="p">})</span>
+        <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">df_grouped</span><span class="p">[</span><span class="s2">"exam_count"</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_grouped</span><span class="p">[</span><span class="s2">"exam"</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="nb">len</span><span class="p">)</span>
+
+    <span class="n">df_grouped</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_grouped</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'exam_count'</span><span class="p">]</span><span class="si">}</span><span class="s2"> exams </span><span class="se">\n</span><span class="s2"> (</span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'students'</span><span class="p">]</span><span class="si">}</span><span class="s2"> students)"</span><span class="p">,</span>
+        <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+    <span class="p">)</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">ColumnDataSource</span><span class="p">(</span><span class="n">df_grouped</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">source</span>
+
+<span class="k">def</span> <span class="nf">make_plot</span> <span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">plot_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Plot the given plot source</span>
+<span class="sd">    source: Plot source</span>
+<span class="sd">    plot_name: Plot name</span>
+<span class="sd">    """</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">figure</span><span class="p">(</span>
+        <span class="n">x_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">6.5</span><span class="p">),</span>
+        <span class="n">y_range</span><span class="o">=</span><span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">plot_name</span><span class="p">,</span>
+        <span class="n">tools</span><span class="o">=</span><span class="s2">"tap"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">ticker</span> <span class="o">=</span> <span class="n">FixedTicker</span><span class="p">(</span><span class="n">ticks</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">ygrid</span><span class="o">.</span><span class="n">ticker</span> <span class="o">=</span> <span class="n">FixedTicker</span><span class="p">(</span><span class="n">ticks</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">major_label_overrides</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"9:00"</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">"13:30"</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">"16:30"</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span> <span class="s2">"9:00"</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span> <span class="s2">"13:30"</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span> <span class="s2">"16:30"</span><span class="p">}</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">ticker</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">major_label_overrides</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span><span class="s2">"Mon"</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="s2">"Tue"</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span><span class="s2">"Wed"</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span><span class="s2">"Thu"</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="s2">"Fri"</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span><span class="s2">"Sat"</span><span class="p">}</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">axis_label</span> <span class="o">=</span> <span class="s2">"Day"</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">axis_label</span> <span class="o">=</span> <span class="s2">"Start Time"</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">major_label_orientation</span> <span class="o">=</span> <span class="mf">1.2</span>
+
+    <span class="n">p</span><span class="o">.</span><span class="n">rect</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="s2">"day"</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="s2">"y"</span><span class="p">,</span>
+        <span class="n">width</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+        <span class="n">fill_color</span><span class="o">=</span><span class="s2">"skyblue"</span><span class="p">,</span>
+        <span class="n">line_color</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="s2">"day"</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="s2">"y"</span><span class="p">,</span>
+        <span class="n">text</span><span class="o">=</span><span class="s2">"label"</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+        <span class="n">text_align</span><span class="o">=</span><span class="s2">"center"</span><span class="p">,</span>
+        <span class="n">text_baseline</span><span class="o">=</span><span class="s2">"middle"</span><span class="p">,</span>
+        <span class="n">text_font_size</span><span class="o">=</span><span class="s2">"8pt"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Callback</span>
+    <span class="n">callback</span> <span class="o">=</span> <span class="n">CustomJS</span><span class="p">(</span>
+        <span class="n">args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="s2">"""</span>
+<span class="s2">        const data = source.data;</span>
+<span class="s2">        const idx = source.selected.indices[0];</span>
+<span class="s2">        if(idx !== undefined){</span>
+<span class="s2">            const day = data['day'][idx];</span>
+<span class="s2">            const week = data['week'][idx];</span>
+<span class="s2">            const y = data['y'][idx];</span>
+<span class="s2">            const exams = data['exam'][idx];</span>
+
+<span class="s2">            alert(</span>
+<span class="s2">                'Day: ' + day +</span>
+<span class="s2">                '</span><span class="se">\\</span><span class="s2">nWeek: ' + week +</span>
+<span class="s2">                '</span><span class="se">\\</span><span class="s2">nTime slot: ' + y +</span>
+<span class="s2">                '</span><span class="se">\\</span><span class="s2">nExams: ' + exams</span>
+<span class="s2">            );</span>
+<span class="s2">        }</span>
+<span class="s2">    """</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">source</span><span class="o">.</span><span class="n">selected</span><span class="o">.</span><span class="n">js_on_change</span><span class="p">(</span><span class="s2">"indices"</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
+
+    <span class="n">show</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=62dead06-4b17-40d1-9ae1-4b3901e256e0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
@@ -7680,12 +7808,12 @@ $$<p>The implementation of this model is the following</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3ff65451-cc05-4ed0-b759-108086625ab8">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=3ff65451-cc05-4ed0-b759-108086625ab8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="c1"># MODEL 1</span>
@@ -7729,42 +7857,17 @@ $$<p>The implementation of this model is the following</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=25e898c8">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">get_schedule_model1</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Extracts the exam schedule from the solution of Model 1 and converts it into a DataFrame</span>
-<span class="sd">    x: Decision variables</span>
-<span class="sd">    Output: A table containing the scheduled exams</span>
-<span class="sd">    """</span>
-    <span class="n">schedule_rows</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">exam_list</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">timeslots</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="n">e</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span><span class="o">.</span><span class="n">X</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
-                <span class="n">row</span> <span class="o">=</span> <span class="n">times_expanded</span><span class="p">[</span><span class="n">times_expanded</span><span class="p">[</span><span class="s2">"timeslot"</span><span class="p">]</span> <span class="o">==</span> <span class="n">t</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">schedule_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                    <span class="p">{</span>
-                        <span class="s2">"exam"</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span>
-                        <span class="s2">"day"</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">"day"</span><span class="p">],</span>
-                        <span class="s2">"week"</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">"week"</span><span class="p">],</span>
-                        <span class="s2">"start_time"</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">"start_time"</span><span class="p">],</span>
-                        <span class="s2">"duration_min"</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">"slot_minutes"</span><span class="p">],</span>
-                        <span class="s2">"timeslot"</span><span class="p">:</span> <span class="n">t</span><span class="p">,</span>
-                    <span class="p">}</span>
-                <span class="p">)</span>
-
-    <span class="c1"># Turn into a DataFrame</span>
-    <span class="n">schedule_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">schedule_rows</span><span class="p">)</span>
-    <span class="n">schedule_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">"timeslot"</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">schedule_df</span>
-</pre></div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Set parameter Username
+Set parameter LicenseID to value 2711254
+Academic license - for non-commercial use only - expires 2026-09-21
+</pre>
 </div>
 </div>
 </div>
@@ -7774,28 +7877,12 @@ $$<p>The implementation of this model is the following</p>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [61]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">schedule_df</span> <span class="o">=</span> <span class="n">get_schedule_model1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-
-<span class="n">schedule_df</span>
-<span class="c1"># timetable = schedule_df.pivot_table(</span>
-<span class="c1">#     index="day",</span>
-<span class="c1">#     columns="start_time",</span>
-<span class="c1">#     values="exam",</span>
-<span class="c1">#     aggfunc=lambda x: ", ".join(x),  # nếu có nhiều exam cùng timeslot (hiếm)</span>
-<span class="c1"># )</span>
-
-<span class="c1"># timetable.style.set_properties(</span>
-<span class="c1">#     **{</span>
-<span class="c1">#         "background-color": "#EFEFFF",</span>
-<span class="c1">#         "font-size": "14px",</span>
-<span class="c1">#         "border-color": "black",</span>
-<span class="c1">#     }</span>
-<span class="c1"># ).set_table_styles([{"selector": "th", "props": [("background-color", "#D0D0FF")]}])</span>
-
-<span class="c1"># timetable</span>
+<span class="n">source1</span> <span class="o">=</span> <span class="n">plot_source</span><span class="p">(</span><span class="n">schedule_df</span><span class="p">)</span>
+<span class="n">make_plot</span><span class="p">(</span><span class="n">source1</span><span class="p">,</span> <span class="s2">"Exam Timetable(Model 1)"</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -7806,7 +7893,7 @@ $$<p>The implementation of this model is the following</p>
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[61]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[ ]:</div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
 <div>
 <style scoped="">
@@ -7942,7 +8029,7 @@ $$<p>The implementation of this model is the following</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=0aef0ca4-7430-471f-9813-3d6a1690785a">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=0aef0ca4-7430-471f-9813-3d6a1690785a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7950,106 +8037,52 @@ $$<p>The implementation of this model is the following</p>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="n">output_notebook</span><span class="p">()</span>
-
-<span class="c1"># 1. Build schedule_df from Model 1</span>
-
-<span class="n">schedule_rows</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">exam_list</span><span class="p">:</span>
-    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">timeslots</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="n">e</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span><span class="o">.</span><span class="n">X</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
-            <span class="n">row</span> <span class="o">=</span> <span class="n">times_expanded</span><span class="p">[</span><span class="n">times_expanded</span><span class="p">[</span><span class="s2">"timeslot"</span><span class="p">]</span> <span class="o">==</span> <span class="n">t</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">schedule_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="p">{</span>
-                    <span class="s2">"exam"</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span>
-                    <span class="s2">"day"</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">"day"</span><span class="p">],</span>
-                    <span class="s2">"start_time"</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">"start_time"</span><span class="p">],</span>
-                    <span class="s2">"timeslot"</span><span class="p">:</span> <span class="n">t</span><span class="p">,</span>
-                <span class="p">}</span>
-            <span class="p">)</span>
-
-<span class="n">schedule_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">schedule_rows</span><span class="p">)</span>
-
-<span class="c1"># 2. Create Y-axis as real time labels</span>
-
-<span class="c1"># Define fixed exam slot times</span>
-<span class="n">time_order</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"9:00"</span><span class="p">,</span> <span class="s2">"13:30"</span><span class="p">,</span> <span class="s2">"16:30"</span><span class="p">]</span>  <span class="c1"># Saturday only uses 9:00</span>
-
-<span class="c1"># Map time strings to numeric Y values (for plotting)</span>
-<span class="n">time_to_y</span> <span class="o">=</span> <span class="p">{</span><span class="n">t</span><span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">time_order</span><span class="p">)}</span>
-<span class="c1"># -&gt; {"9:00":1, "13:30":2, "16:30":3}</span>
-
-<span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span><span class="p">,</span> <span class="n">exam_texts</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
-
-<span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">schedule_df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-    <span class="n">day</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"day"</span><span class="p">]</span>
-    <span class="n">time</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"start_time"</span><span class="p">]</span>
-
-    <span class="c1"># numeric y coordinate</span>
-    <span class="n">y_val</span> <span class="o">=</span> <span class="n">time_to_y</span><span class="p">[</span><span class="n">time</span><span class="p">]</span>
-
-    <span class="n">x_coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">day</span><span class="p">)</span>
-    <span class="n">y_coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_val</span><span class="p">)</span>
-    <span class="n">exam_texts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">"exam"</span><span class="p">])</span>
-
-<span class="c1"># 3. Combine exams in same cell</span>
-
-<span class="n">df_vis</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"day"</span><span class="p">:</span> <span class="n">x_coords</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">:</span> <span class="n">y_coords</span><span class="p">,</span> <span class="s2">"exam"</span><span class="p">:</span> <span class="n">exam_texts</span><span class="p">})</span>
-
-<span class="n">df_grouped</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">df_vis</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">"day"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">])[</span><span class="s2">"exam"</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
-<span class="p">)</span>
-
-<span class="n">source</span> <span class="o">=</span> <span class="n">ColumnDataSource</span><span class="p">(</span><span class="n">df_grouped</span><span class="p">)</span>
-
-<span class="c1"># 4. Plotting</span>
-
-<span class="n">p</span> <span class="o">=</span> <span class="n">figure</span><span class="p">(</span>
-    <span class="n">x_range</span><span class="o">=</span><span class="p">[</span><span class="s2">"Mon"</span><span class="p">,</span> <span class="s2">"Tue"</span><span class="p">,</span> <span class="s2">"Wed"</span><span class="p">,</span> <span class="s2">"Thu"</span><span class="p">,</span> <span class="s2">"Fri"</span><span class="p">,</span> <span class="s2">"Sat"</span><span class="p">],</span>
-    <span class="n">y_range</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_order</span><span class="p">)],</span>  <span class="c1"># numeric range</span>
-    <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
-    <span class="n">title</span><span class="o">=</span><span class="s2">"Exam Timetable (Model 1)"</span><span class="p">,</span>
-    <span class="n">tools</span><span class="o">=</span><span class="s2">"tap"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">p</span><span class="o">.</span><span class="n">rect</span><span class="p">(</span>
-    <span class="n">x</span><span class="o">=</span><span class="s2">"day"</span><span class="p">,</span>
-    <span class="n">y</span><span class="o">=</span><span class="s2">"y"</span><span class="p">,</span>
-    <span class="n">width</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
-    <span class="n">height</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
-    <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
-    <span class="n">fill_color</span><span class="o">=</span><span class="s2">"skyblue"</span><span class="p">,</span>
-    <span class="n">line_color</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Callback</span>
-<span class="n">callback</span> <span class="o">=</span> <span class="n">CustomJS</span><span class="p">(</span>
-    <span class="n">args</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">),</span>
-    <span class="n">code</span><span class="o">=</span><span class="s2">"""</span>
-<span class="s2">    const data = source.data;</span>
-<span class="s2">    const idx = source.selected.indices[0];</span>
-<span class="s2">    if(idx !== undefined){</span>
-<span class="s2">        const day = data['day'][idx];</span>
-<span class="s2">        const y = data['y'][idx];</span>
-<span class="s2">        const exams = data['exam'][idx];</span>
-<span class="s2">        alert('Day: ' + day + '</span><span class="se">\\</span><span class="s2">nTime slot: ' + y + '</span><span class="se">\\</span><span class="s2">nExams: ' + exams);</span>
-<span class="s2">    }</span>
-<span class="s2">"""</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">source</span><span class="o">.</span><span class="n">selected</span><span class="o">.</span><span class="n">js_on_change</span><span class="p">(</span><span class="s2">"indices"</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
-
-<span class="c1"># Y-axis labels -&gt; replace numeric with actual time labels</span>
-<span class="n">p</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">ticker</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
-<span class="n">p</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">major_label_overrides</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"9:00"</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">"13:30"</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">"16:30"</span><span class="p">}</span>
-
-<span class="n">p</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">axis_label</span> <span class="o">=</span> <span class="s2">"Day"</span>
-<span class="n">p</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">axis_label</span> <span class="o">=</span> <span class="s2">"Start Time"</span>
-
-<span class="n">p</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">major_label_orientation</span> <span class="o">=</span> <span class="mf">1.2</span>
-
-<span class="n">show</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<div class="highlight hl-ipython3"><pre><span></span> 
 </pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<div data-root-id="p2794" id="b616c13b-52ed-4bcc-839b-edddb53fd01b" style="display: contents;"></div>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedJavaScript jp-OutputArea-output" data-mime-type="application/javascript" id="0b4daa37-1ea7-423f-99a7-f517b1fd739c" tabindex="0">
+<script type="text/javascript">
+var element = document.getElementById('0b4daa37-1ea7-423f-99a7-f517b1fd739c');
+(function(root) {
+  function embed_document(root) {
+  const docs_json = {"ebc36ac2-5e80-4a72-9d7f-c5263c438c9e":{"version":"3.6.0","title":"Bokeh Application","roots":[{"type":"object","name":"Figure","id":"p2794","attributes":{"x_range":{"type":"object","name":"Range1d","id":"p2804","attributes":{"start":0.5,"end":6.5}},"y_range":{"type":"object","name":"Range1d","id":"p2805","attributes":{"start":8,"end":0}},"x_scale":{"type":"object","name":"LinearScale","id":"p2806"},"y_scale":{"type":"object","name":"LinearScale","id":"p2807"},"title":{"type":"object","name":"Title","id":"p2797","attributes":{"text":"Exam Timetable(Model 1)"}},"renderers":[{"type":"object","name":"GlyphRenderer","id":"p2828","attributes":{"data_source":{"type":"object","name":"ColumnDataSource","id":"p2791","attributes":{"selected":{"type":"object","name":"Selection","id":"p2792","attributes":{"js_property_callbacks":{"type":"map","entries":[["change:indices",[{"type":"object","name":"CustomJS","id":"p2840","attributes":{"args":{"type":"map","entries":[["source",{"id":"p2791"}]]},"code":"\n        const data = source.data;\n        const idx = source.selected.indices[0];\n        if(idx !== undefined){\n            const day = data['day'][idx];\n            const week = data['week'][idx];\n            const y = data['y'][idx];\n            const exams = data['exam'][idx];\n\n            alert(\n                'Day: ' + day +\n                '\\nWeek: ' + week +\n                '\\nTime slot: ' + y +\n                '\\nExams: ' + exams\n            );\n        }\n    "}}]]]},"indices":[],"line_indices":[]}},"selection_policy":{"type":"object","name":"UnionRenderers","id":"p2793"},"data":{"type":"map","entries":[["index",{"type":"ndarray","array":{"type":"bytes","data":"AAAAAAEAAAACAAAAAwAAAAQAAAAFAAAABgAAAAcAAAAIAAAACQAAAAoAAAALAAAADAAAAA0AAAAOAAAADwAAABAAAAARAAAAEgAAABMAAAAUAAAAFQAAABYAAAAXAAAAGAAAABkAAAAaAAAAGwAAABwAAAAdAAAAHgAAAB8AAAA="},"shape":[32],"dtype":"int32","order":"little"}],["day",{"type":"ndarray","array":{"type":"bytes","data":"AQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAwAAAAMAAAADAAAAAwAAAAMAAAADAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABQAAAAUAAAAFAAAABQAAAAUAAAAFAAAABgAAAAYAAAA="},"shape":[32],"dtype":"int32","order":"little"}],["y",{"type":"ndarray","array":{"type":"bytes","data":"AQAAAAIAAAADAAAABQAAAAYAAAAHAAAAAQAAAAIAAAADAAAABQAAAAYAAAAHAAAAAQAAAAIAAAADAAAABQAAAAYAAAAHAAAAAQAAAAIAAAADAAAABQAAAAYAAAAHAAAAAQAAAAIAAAADAAAABQAAAAYAAAAHAAAAAQAAAAUAAAA="},"shape":[32],"dtype":"int32","order":"little"}],["week",{"type":"ndarray","array":{"type":"bytes","data":"AQAAAAEAAAABAAAAAgAAAAIAAAACAAAAAQAAAAEAAAABAAAAAgAAAAIAAAACAAAAAQAAAAEAAAABAAAAAgAAAAIAAAACAAAAAQAAAAEAAAABAAAAAgAAAAIAAAACAAAAAQAAAAEAAAABAAAAAgAAAAIAAAACAAAAAQAAAAIAAAA="},"shape":[32],"dtype":"int32","order":"little"}],["exam",{"type":"ndarray","array":[["K4C280E1","L83120E1","HG1J1AE1","H8B045E1","V6B335E1","H6P002E1","M1B372E1","C13562E1","M3B066E1","N11102E1","B32327E1","N12203E1","G13QT1E1","C81HBAE1","Q8P010E1","F331Z4E1","R13014E1","V13185E1","R42217E1","F12I01E1","D23342E1","V42133E1","L82121E1","H3CFM3E1","AAA033E1","L3B015E1","L13507E1","K1AHWAE2","V82110E1","J5BSTME1","J5CCRME1","L31109E1","HGCEMBE1"],["G5BCCNE1","V41143E1","Q4B104E1","V81107E1","Q8B044E1","V62200E1","M31012E1","AAB058E1","N1B409E1","D21102E1","C81J5AE1","H62160E1","EN00P1E1","B33548E1","V11105E1","F11I02E1","M1B382E1","H7CFAME1","F11P01E1","C82DUAE1","R83038E1","L3B026E1","H6C162E1","G13CS2E1"],["C81J2AE2","R21206E1","V13177E1","C81ICAE1","G12AN1E1","R81022E1","V13105E1","C82OUAE1","D23315E1","K4C120E1","G5BAIPE1","Q83184E1","H7CCNGE1","V61120E1","L3B030E1","LK10GAE1","V7A109E1","D22227E1","H22M02E1","N1B410E1","J1C205E1","M13468E1"],["V6B329E1","L3B046E1","LKB2JAE1","V7A101E1","V11109E1","R12024E1","L12310E1","R83054E1","LK44SAE1","R81015E1","Q33307E1","N1B201E1","L81122E1","W32H16E1","J1C125E1","C43511E1","G13SP2E1","C82BUAE1","H23C20E1","AAB025E1","K4C110E1","H6C152E1","B11101E1","H3CTSEE1","HGAEM2E1","G13AN4E1"],["F13I05E1","H7BMACE1","R43153E1","F311E1E1","N1A104E1","M3A015E1","M33042E1","F12X04E1","C52303E1","C71101E1","V13169E1","R83056E1","R8A013E1","H8C001E1","V13159E1","V11111E1","V12139E1","R82022E1","J1C111E1","N13303E1","R13006E1","W32F10E1","AAA013E1","V83123E1","K1BCSTE1","Q8B075E1","B32326E1","V7A214E1","L31073E1","G51MC1E1","H22C20E1"],["R42103E1","R13017E1","Q83170E1","Q81001E1","Q8B043E1","G111ACE1","L13504E1","H6C133E1","V13296E1","G111GAE1","R83044E1","K1ATS1E1","H62131E1","H7CSERE1","G111GBE1","F12X04E2","L13520E1","R4B209E1","H3BFM2E2","H2CS06E1","V43103E1"],["K4C140E1","L82111E1","V12119E1","J1A110E1","H8C002E1","L3B032E1","H7CHCME1","F12X05E1","H72ENTE1","G13AS5E1","F13I06E1","L13503E1","H5C142E1","F311Q1E1","F321C6E1","H3CDMSE1","R13022E1","N12403E1","J52EMME1","M13367E1","HG3J5GE1","L11120E1","V72AINE1","C13564E1","C42304E1","C8CXCEE1","V41142E1","C12327E1"],["F12O02E1","F12P01E1","C81J1AE2","H8C043E1","C81J2AE1","Q8B045E1","F13P03E1","G5P002E1","N1B420E1","M3B034E1","H3AFM1E1","B12301E1","F311M1E1","V13181E1","V6B310E1","R13011E1","D23360E1","K4C290E1","D23336E1","Q83142E1","G111CCE1","LKA1IAE1","Q83186E1","C1P001E1","M1B355E1","V11103E1","H71EMPE1","R12025E1"],["Q3A301E1","F321T6E1","F331Z8E1","F321Q9E1","J1B116E1","V13197E1","V41124E1","C81IDAE1","Q8B096E1","C81J4AE1","L3C086E1","G13RE2E1","N13302E1","V43133E1","V13173E1","V6B307E1","H3CENIE1","M3B031E1","HG2J3BE1","LKB2GAE1","V83138E1","L12302E1","M11345E1"],["Q4A101E1","F331S9E1","EN00P5E1","V12115E1","H7BEGDE1","G5BSBBE1","H71MS1E1","G111MCE1","Q33308E1","F321S6E1","F11P02E1","H2CH05E1","R12005E1","C83XWHE1","Q83108E1","V42143E1","L13521E1","LKB2SAE1","C12333E1","K1BBS1E1","L83160E1","B13103E1","L81112E1","C11105E1","C82MCPE1","V7A216E1","V73127E1","J1C106E1","LKB2FAE1"],["W32C10E1","M3B057E1","R11001E1","H3BMS2E1","V43143E1","Q3B211E1","L83115E1","L3C064E1","R12001E1","V42103E1","Q82024E1","C8CXESE1","Q13017E1","H82006E1","H72IRNE1","H23CEOE1","C81IAAE1","Q83110E1","C81MJAE1","H22S02E1","L12404E1","HG1EM0E1"],["F321T2E1","C12329E1","H31BDAE1","J5BORME1","B33549E1","J1B117E1","H2CH04E1","N1B407E1","G11MA2E1","R43149E1","Q82028E1","C82MHAE1","Q83168E1","K43100E1","V11107E1","F11O01E1","R23111E1","H81022E1","LK10IAE1","H53171E1","HG2J4AE1","C82MJAE1","L13505E1","L31005E1","L82124E1","R4A117E1","L82113E1","V12129E1","V13103E1"],["HGCEMCE1","EN00C1E1","R13003E1","V13125E1","G11AS1E1","F331X5E1","V12131E1","L3B049E1","Q4A210E1","L82132E1","LKC3SAE1","V82C01E1","Q8B074E1","H3BMDYE1","C13573E1","B33545E1","L13508E1","C43512E1","G5BGRAE1","L31097E1","H31DM1E1","C8CXDLE1","F311B1E1","V72121E1","N1B408E1","LK44FAE1"],["L11130E1","M3A019E1","V7A117E1","Q8B056E1","H2CP01E1","N13304E1","LK10FAE1","C12328E1","H22V02E1","H82024E1","HGBEM4E1","M1B373E1","H8A011E1","G52ALGE1","H7CFOOE1","B33563E1","V41103E1","F311X1E1","J51R01E1","F13X01E1","R11003E1","J1C122E1","F311Z1E1","K1AHRSE1","V83143E1","V81101E1","R13012E1"],["M11341E1","F13P02E1","HG3J5BE1","G53RDBE1","H8B040E1","H2CG03E1","G52OBJE1","J1B203E1","M11351E1","LKA1FAE1","L3B036E1","V13104E1","V73MD1E1","V12123E1","AAA011E1"],["V82115E1","Q4A219E1","Q31301E1","V73233E1","LKC3FAE1","HG3S5EE1","C8CXCHE1","LKA1RAE1","LK44GAE1","EN00P7E1","V13163E1","C81HDAE1","M33053E1","M33059E1","J1A112E1","F311V1E1","J1C116E1","N1B404E1","R22110E1","C13565E1"],["R23209E1","V12121E1","C12331E1","F321E4E1","C81J3AE1","R11004E1","G12ME1E1","R23105E1","B11102E1","R13001E1","Q8B094E1","G111VBE1","V81105E1","B32322E1","AA2016E1","H3CPOEE1","G5P005E1","K41110E1","H2CV03E1","M3B049E1","G5ABELE1","M33074E1","Q13013E1","M12353E1"],["M12365E1","V6B308E1","R12026E1","C12324E1","V81109E1","F331O6E1","F331N3E1","N1B202E1","LK10RAE1","H31ENCE1","B31105E1","H81050E1","H33CONE1","J1B115E1","R83046E1","F11O02E1","H71MIPE1","V12116E1","R4A101E1","J1B109E1","Q83144E1","L11102E1","K1BTMSE1"],["V43124E1","LKC3GAE1","R43148E1","V13108E1","F13O03E1","H33MI2E1","L12320E1","H8C039E1","C82HUAE1","M1B363E1","M33060E1","M31006E1","K42120E1","H5C113E1","C13563E1","H8A009E1","R83052E1","J51IMAE1","G11PR1E1","F311M0E1","HG3J5AE1","R21101E1","Q8A310E1","R13007E1","C72303E1","G13ST6E1","Q32302E1","B12320E1"],["F321Q6E1","N1A402E1","Q3A201E1","G53FSPE1","L12330E1","K1BACOE1","F331Q3E1","LKA1GAE1","H72NNSE1","B32321E1","C8COUAE1","H7CMSGE1","R13015E1","C81JIAE2","M33036E1","R81003E1","L31004E1","N1B405E1","V43112E1","F13I01E1","V42117E1","L83118E1","R22203E1","R4A119E1","L13509E1","R4A210E1"],["V13214E1","V61110E1","M11343E1","F311A1E1","Q8B341E1","N13301E1","M3B030E1","W31A12E1","R22212E1","HGCEMME1","G111DGE1","G13LO1E1","R83043E1","HGCEMAE1","V7A204E1","V6B333E1","C82CUAE1","C81JIAE1","F13O06E1","H61120E1","HG2J3AE1","C81J1AE1","N11103E1"],["N13305E1","V6B313E1","R82025E1","F13I02E1","V7A105E1","AA3008E1","R4B107E1","V13119E1","B31101E1","C82BCSE1","HG1J1BE1","C81J4AE2","H3CMECE1","HG2S3EE1","R23117E1","F13P05E1","F321Z3E1","G13RE1E1","H21H01E1","M13369E1","L3B021E1","HGBEM3E1","R8A011E1","H7CSIME1","L82125E1","F331N6E1","G51HOCE1","L11100E1","V13111E1","C12338E1"],["R4A215E1","H7CSURE1","V12143E1","F12O01E1","V7A107E1","H3BDM3E1","H71IWEE1","M11347E1","J1A111E1","L13516E1","V6B302E1","F3B1X4E1","F3B1B3E1","R13021E1","R22102E1","L83122E1","F311X2E1"],["V73128E1","C41101E1","F331S2E1","C13572E1","G51DSDE1","H7CORGE1","H7CLASE1","V12148E1","G13CM2E1","R13005E1","EN00P3E1","LKA1JAE1","HG2J3DE1","V82111E1","L31107E1","H51200E1","V72119E1","B31107E1","AAA022E1","J1C227E1","V41112E1","L3B090E1","M3A010E1","F12X02E1","M3B062E1"],["H82046E1","V71101E1","J1A202E1","L13502E1","K4P300E1","B33544E1","H2CT01E1","C13569E1","R12008E1","G13PR2E1","C73507E1","Q3A308E1","R21104E1","G5BDBSE1","R23216E1","H3CFRCE1","M3A002E1","R43152E1","M33064E1","H5C112E1","C11101E1","M11451E1","C12332E1","R83036E1","V13101E1","C8P002E1","R82027E1"],["M1B380E1","W32H14E1","C82SUAE1","B31103E1","H21M01E1","R11002E1","L13511E1","R13016E1","J5CCCEE1","LK10KBE1","Q8B063E1","F12I02E1","AAA034E1","R82028E1","G13AL4E1","F12X04E3","F331X3E1"],["G12AL1E1","R23102E1","L31013E1","L12303E1","F311T1E1","V13155E1","AAA024E1","R22112E1","V6B336E1","J1A203E1","L82120E1","H8C019E1","V41133E1","H51140E1","C12325E1","H7ACS1E1","H21B00E1","Q33211E1","H63122E1","M1B351E1","H82029E1"],["LK10JAE1","H7CAMFE1","L83123E1","V43239E1","L83121E1","V42112E1","Q81009E1","LKA1SAE1","C42307E1","HG3S5FE1","J1B113E1","LK10SAE1","Q4B102E1","G12MM1E1","G53VIPE1","K4P100E1","R13023E1","H2CM04E1","F311X4E1","Q3B201E1","L11110E1","R23106E1","R23107E1","C8P001E1","R43204E1","L11140E1","F12P03E1","M1B357E1","G13MM2E1","V73232E1","Q82031E1","R83051E1"],["W32H10E1","L11101E1","V81103E1","B12303E1","G111VAE1","F331M9E1","Q81011E1","L3B100E1","R13044E1","F321Q2E1","R22101E1","H24C20E1","B33541E1","R8B032E1","G13ST3E1","F13X04E1","M31001E1","F13X03E1","V13152E1","F13O01E1","C81MSAE1","V6A100E1","B32325E1","H83024E1","H7BMOQE1"],["J1C112E1","J5BSMAE1","V82113E1","Q81016E1","C13571E1","Q83172E1","G13LA1E1","G12ST1E1","Q3A303E1","R12002E1","H22G06E1","R13009E1","F321M1E1","M3B055E1","F13P01E1","H51100E1","H52110E1","M1B374E1","R23009E1","C81J3AE2","C42306E1","H6P001E1","V43125E1","C81HCAE1","V12127E1"],["J5CMUSE1","R43146E1","H3CNUEE1","H72LOGE1","K41210E1","LKC3RAE1","C12321E1","C8CXPAE1","L11150E1","C81IBAE1","H3BFM2E1","V12135E1","L13510E1","J1A102E1","Q8B076E1","Q83198E1","C81HAAE1","V83119E1","L83112E1","R22204E1","V7A211E1","M3B043E1","C81J5AE2","R23104E1","H2CS05E1"],["V43117E1","G12PR1E1","Q4A106E1","V6B306E1","G11MA1E1","Q3A307E1","Q81003E1","G53LCTE1","V42124E1","N1B422E1","K1APADE1","M1B359E1","B12302E1","K1AEU1E1","N1B406E1","J1B111E1","R13101E1","N1A110E1","HG1S1CE1","C13567E1","H7CEPDE1","F13O02E1","F13I03E1","J1C119E1","F11I01E1","F12P02E1","V81C17E1","L11111E1"]],"shape":[32],"dtype":"object","order":"little"}],["students",{"type":"ndarray","array":{"type":"bytes","data":"VwUAADMEAAD/AgAAiAUAAIMFAACjAwAAaQQAAJMDAABsAgAAYAQAADEEAABaBQAAwAMAAFIFAAAIAgAAWQIAAMsDAADZBAAA7wQAACcEAADZAwAAwAUAAP8CAAAyBAAAfwQAAHMCAAAhBQAAmgMAALQFAAAMBAAA4QIAAP4EAAA="},"shape":[32],"dtype":"int32","order":"little"}],["exam_count",{"type":"ndarray","array":{"type":"bytes","data":"IQAAABgAAAAWAAAAGgAAAB8AAAAVAAAAHAAAABwAAAAXAAAAHQAAABYAAAAdAAAAGgAAABsAAAAPAAAAFAAAABgAAAAXAAAAHAAAABoAAAAXAAAAHgAAABEAAAAZAAAAGwAAABEAAAAVAAAAIAAAABkAAAAZAAAAGQAAABwAAAA="},"shape":[32],"dtype":"int32","order":"little"}],["label",{"type":"ndarray","array":["33 exams \n (1367 students)","24 exams \n (1075 students)","22 exams \n (767 students)","26 exams \n (1416 students)","31 exams \n (1411 students)","21 exams \n (931 students)","28 exams \n (1129 students)","28 exams \n (915 students)","23 exams \n (620 students)","29 exams \n (1120 students)","22 exams \n (1073 students)","29 exams \n (1370 students)","26 exams \n (960 students)","27 exams \n (1362 students)","15 exams \n (520 students)","20 exams \n (601 students)","24 exams \n (971 students)","23 exams \n (1241 students)","28 exams \n (1263 students)","26 exams \n (1063 students)","23 exams \n (985 students)","30 exams \n (1472 students)","17 exams \n (767 students)","25 exams \n (1074 students)","27 exams \n (1151 students)","17 exams \n (627 students)","21 exams \n (1313 students)","32 exams \n (922 students)","25 exams \n (1460 students)","25 exams \n (1036 students)","25 exams \n (737 students)","28 exams \n (1278 students)"],"shape":[32],"dtype":"object","order":"little"}]]}}},"view":{"type":"object","name":"CDSView","id":"p2829","attributes":{"filter":{"type":"object","name":"AllIndices","id":"p2830"}}},"glyph":{"type":"object","name":"Rect","id":"p2825","attributes":{"x":{"type":"field","field":"day"},"y":{"type":"field","field":"y"},"width":{"type":"value","value":0.9},"height":{"type":"value","value":0.8},"fill_color":{"type":"value","value":"skyblue"}}},"nonselection_glyph":{"type":"object","name":"Rect","id":"p2826","attributes":{"x":{"type":"field","field":"day"},"y":{"type":"field","field":"y"},"width":{"type":"value","value":0.9},"height":{"type":"value","value":0.8},"line_alpha":{"type":"value","value":0.1},"fill_color":{"type":"value","value":"skyblue"},"fill_alpha":{"type":"value","value":0.1},"hatch_alpha":{"type":"value","value":0.1}}},"muted_glyph":{"type":"object","name":"Rect","id":"p2827","attributes":{"x":{"type":"field","field":"day"},"y":{"type":"field","field":"y"},"width":{"type":"value","value":0.9},"height":{"type":"value","value":0.8},"line_alpha":{"type":"value","value":0.2},"fill_color":{"type":"value","value":"skyblue"},"fill_alpha":{"type":"value","value":0.2},"hatch_alpha":{"type":"value","value":0.2}}}}},{"type":"object","name":"GlyphRenderer","id":"p2837","attributes":{"data_source":{"id":"p2791"},"view":{"type":"object","name":"CDSView","id":"p2838","attributes":{"filter":{"type":"object","name":"AllIndices","id":"p2839"}}},"glyph":{"type":"object","name":"Text","id":"p2834","attributes":{"x":{"type":"field","field":"day"},"y":{"type":"field","field":"y"},"text":{"type":"field","field":"label"},"text_color":{"type":"value","value":"black"},"text_font_size":{"type":"value","value":"8pt"},"text_align":{"type":"value","value":"center"},"text_baseline":{"type":"value","value":"middle"}}},"nonselection_glyph":{"type":"object","name":"Text","id":"p2835","attributes":{"x":{"type":"field","field":"day"},"y":{"type":"field","field":"y"},"text":{"type":"field","field":"label"},"text_color":{"type":"value","value":"black"},"text_alpha":{"type":"value","value":0.1},"text_font_size":{"type":"value","value":"8pt"},"text_align":{"type":"value","value":"center"},"text_baseline":{"type":"value","value":"middle"}}},"muted_glyph":{"type":"object","name":"Text","id":"p2836","attributes":{"x":{"type":"field","field":"day"},"y":{"type":"field","field":"y"},"text":{"type":"field","field":"label"},"text_color":{"type":"value","value":"black"},"text_alpha":{"type":"value","value":0.2},"text_font_size":{"type":"value","value":"8pt"},"text_align":{"type":"value","value":"center"},"text_baseline":{"type":"value","value":"middle"}}}}}],"toolbar":{"type":"object","name":"Toolbar","id":"p2803","attributes":{"tools":[{"type":"object","name":"TapTool","id":"p2818","attributes":{"renderers":"auto"}}]}},"left":[{"type":"object","name":"LinearAxis","id":"p2813","attributes":{"ticker":{"type":"object","name":"FixedTicker","id":"p2819","attributes":{"ticks":[1,2,3,5,6,7],"minor_ticks":[]}},"formatter":{"type":"object","name":"BasicTickFormatter","id":"p2815"},"axis_label":"Start Time","major_label_overrides":{"type":"map","entries":[[1,"9:00"],[2,"13:30"],[3,"16:30"],[5,"9:00"],[6,"13:30"],[7,"16:30"]]},"major_label_policy":{"type":"object","name":"AllLabels","id":"p2816"}}}],"below":[{"type":"object","name":"LinearAxis","id":"p2808","attributes":{"ticker":{"type":"object","name":"FixedTicker","id":"p2821","attributes":{"ticks":[1,2,3,4,5,6],"minor_ticks":[]}},"formatter":{"type":"object","name":"BasicTickFormatter","id":"p2810"},"axis_label":"Day","major_label_orientation":1.2,"major_label_overrides":{"type":"map","entries":[[1,"Mon"],[2,"Tue"],[3,"Wed"],[4,"Thu"],[5,"Fri"],[6,"Sat"]]},"major_label_policy":{"type":"object","name":"AllLabels","id":"p2811"}}}],"center":[{"type":"object","name":"Grid","id":"p2812","attributes":{"axis":{"id":"p2808"}}},{"type":"object","name":"Grid","id":"p2817","attributes":{"dimension":1,"axis":{"id":"p2813"},"ticker":{"type":"object","name":"FixedTicker","id":"p2820","attributes":{"ticks":[1,2,3,5,6,7],"minor_ticks":[]}}}}]}}]}};
+  const render_items = [{"docid":"ebc36ac2-5e80-4a72-9d7f-c5263c438c9e","roots":{"p2794":"b616c13b-52ed-4bcc-839b-edddb53fd01b"},"root_ids":["p2794"]}];
+  void root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
+  }
+  if (root.Bokeh !== undefined) {
+    embed_document(root);
+  } else {
+    let attempts = 0;
+    const timer = setInterval(function(root) {
+      if (root.Bokeh !== undefined) {
+        clearInterval(timer);
+        embed_document(root);
+      } else {
+        attempts++;
+        if (attempts > 100) {
+          clearInterval(timer);
+          console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+        }
+      }
+    }, 10, root)
+  }
+})(window);
+</script>
 </div>
 </div>
 </div>
