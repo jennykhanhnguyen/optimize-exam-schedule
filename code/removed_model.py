@@ -867,3 +867,120 @@
 # print(f"  Solution time: {model3.Runtime:.2f} seconds")
 # print(f"  MIP Gap: {model3.MIPGap*100:.2f}%")
 # print(f"{'═'*80}")
+
+# model4 = gp.Model("Minimizing same day student conflicts")
+
+# # Build student exam pairs (i < j)
+# student_pairs = {}
+# for s, exams_s in students_exams.items():
+#     pairs = []
+#     for i in range(len(exams_s)):
+#         for j in range(i + 1, len(exams_s)):
+#             pairs.append((exams_s[i], exams_s[j]))
+#     student_pairs[s] = pairs
+
+# # Timeslot -> Day mapping
+# timeslot_to_day = {row["timeslot"]: row["day"] for _, row in times_expanded.iterrows()}
+
+# days = sorted(times_expanded["day"].unique())
+
+# # Decision variables
+# # x[e,t] = 1 if exam e is assigned to timeslot t
+# x = model4.addVars(exam_list, timeslots, vtype=GRB.BINARY, name="x")
+
+# # z[e,t,r] = 1 if exam e uses room r in timeslot t
+# z = model4.addVars(exam_list, timeslots, room_list, vtype=GRB.BINARY, name="z")
+
+# # y[e,t,g] = 1 if exam e activates super-room g in timeslot t
+# y = model4.addVars(exam_list, timeslots, super_rooms, vtype=GRB.BINARY, name="y")
+
+# # c[s,i,j] = 1 if exams i,j on same day
+# c = model4.addVars(
+#     [(s, i, j) for s, pairs in student_pairs.items() for (i, j) in pairs],
+#     vtype=GRB.BINARY,
+#     name="same_day_conflict",
+# )
+
+# # Constraints
+# # 1. Each exam must be assigned exactly one timeslot
+# for e in exam_list:
+#     model4.addConstr(
+#         gp.quicksum(x[e, t] for t in timeslots) == 1, name=f"timeslot_once_{e}"
+#     )
+
+# # 2. Linking: cannot use room without being in that timeslot
+# for e in exam_list:
+#     for t in timeslots:
+#         for r in room_list:
+#             model4.addConstr(z[e, t, r] <= x[e, t], name=f"link_zx_{e}_{t}_{r}")
+
+# # 3. Student conflict: no overlapping exams
+# for student, exams_s in students_exams.items():
+#     for t in timeslots:
+#         for i in range(len(exams_s)):
+#             for j in range(i + 1, len(exams_s)):
+#                 e1, e2 = exams_s[i], exams_s[j]
+#                 model4.addConstr(
+#                     x[e1, t] + x[e2, t] <= 1, name=f"no_overlap_{student}_{e1}_{e2}_{t}"
+#                 )
+
+#     # 4. Capacity constraint with super room merging
+#     for t in timeslots:
+#         model4.addConstr(
+#             # Sum individual rooms
+#             gp.quicksum(cap[r] * z[e, t, r] for r in room_list) +
+#             # Sum super-room capacities
+#             gp.quicksum(super_capacity[g] * y[e, t, g] for g in super_rooms)
+#             >= size[e] * x[e, t],
+#             name=f"capacity_total_{e}_{t}",
+#         )
+
+# # 5. Super room activation forces all internal rooms to be blocked
+# for g in super_rooms:
+#     rooms_in_g = super_to_rooms[g]
+#     for e in exam_list:
+#         for t in timeslots:
+#             for r in rooms_in_g:
+#                 model4.addConstr(
+#                     z[e, t, r] >= y[e, t, g], name=f"superroom_block_{e}_{t}_{g}_{r}"
+#                 )
+
+# # 6. Room conflict: room r can host at most one exam per timeslot
+# for r in room_list:
+#     for t in timeslots:
+#         model4.addConstr(
+#             gp.quicksum(z[e, t, r] for e in exam_list) <= 1,
+#             name=f"room_conflict_{r}_{t}",
+#         )
+
+# # 7. Duration feasibility
+# for e in exam_list:
+#     for t in timeslots:
+#         if duration[e] > slot_length[t]:
+#             model4.addConstr(x[e, t] == 0, name=f"duration_forbidden_{e}_{t}")
+
+# # 8. Activate c if exams fall on the same day
+# for s, pairs in student_pairs.items():
+#     for i, j in pairs:
+#         for d in days:
+#             t_day = [t for t in timeslots if timeslot_to_day[t] == d]
+
+#             model4.addConstr(
+#                 c[s, i, j]
+#                 >= gp.quicksum(x[i, t] for t in t_day)
+#                 + gp.quicksum(x[j, t] for t in t_day)
+#                 - 1,
+#                 name=f"same_day_{s}_{i}_{j}_{d}",
+#             )
+
+
+# # Objective
+# model4.setObjective(gp.quicksum(c[key] for key in c.keys()), GRB.MINIMIZE)
+
+# model4.optimize()
+
+# print("Model 4: Minimizing same day student conflicts \n")
+# for e in exam_list:
+#     t_assigned = next(t for t in timeslots if x[e, t].X > 0.5)
+#     rooms_used = [r for r in room_list if z[e, t_assigned, r].X > 0.5]
+#     print(f"Exam {e} -> Timeslot {t_assigned}, Rooms {rooms_used}")
