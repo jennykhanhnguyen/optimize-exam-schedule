@@ -2,6 +2,8 @@
 
 This project explores how university final exam schedules can be built more fairly and systematically using optimization techniques. Using the University of Nottingham’s real exam timetabling dataset, we analyze why students often experience stressful schedules (e.g., multiple exams in one day) and build optimization models to generate more balanced timetables.
 
+You can look at our slides here: https://docs.google.com/presentation/d/1IiUhD3Mf-zWZHj7MJAd-qVUnMkSFlUGdaP7I0HLV4iE/edit?usp=sharing
+
 🔍 What We Did
 
 Preprocessed Nottingham’s dataset (800 exams, 7,896 students, 33,997 enrollments).
